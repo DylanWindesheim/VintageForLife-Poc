@@ -9,6 +9,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.List;
 
+/** Het hoofdvenster van de applicatie. Hier komen alle panelen samen en worden de knoppen beheerd. */
 public class MainFrame extends JFrame {
 
     private AlgorithmSelectiePanel algPanel;
@@ -18,7 +19,7 @@ public class MainFrame extends JFrame {
 
     public MainFrame() { initialiseer(); }
 
-    /** Bouwt het hoofdvenster op met alle panelen en knoppen. */
+    /** Bouwt het venster op: laadt testdata, maakt de drie panelen aan en voegt knoppen toe. */
     public void initialiseer() {
         setTitle("Vintage for Life — Route Optimalisatie POC");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -29,11 +30,16 @@ public class MainFrame extends JFrame {
         kaartPanel = new KaartPanel();
         resultatenPanel = new ResultatenPanel();
 
+        // Knoppen onderaan het venster
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 6));
         JButton btnBereken = new JButton("Bereken Route");
         JButton btnReset = new JButton("Reset testdata");
         btnBereken.setFont(new Font("SansSerif", Font.BOLD, 13));
+
+        // Klik op "Bereken Route" → voer het gekozen algoritme uit
         btnBereken.addActionListener(e -> berekenRoute());
+
+        // Klik op "Reset" → laad de originele testdata opnieuw
         btnReset.addActionListener(e -> {
             stopList = RouteUtils.genereerTestdata();
             kaartPanel.setHuidigeRoute(null);
@@ -52,6 +58,7 @@ public class MainFrame extends JFrame {
         southPanel.add(buttonPanel, BorderLayout.WEST);
         southPanel.add(statusBar, BorderLayout.SOUTH);
 
+        // Links: algoritme keuze, midden: kaart, rechts: resultaten
         add(algPanel, BorderLayout.WEST);
         add(kaartPanel, BorderLayout.CENTER);
         add(resultatenPanel, BorderLayout.EAST);
@@ -63,7 +70,7 @@ public class MainFrame extends JFrame {
         setVisible(true);
     }
 
-    /** Voert het geselecteerde algoritme uit en werkt kaart en resultaten bij. */
+    /** Haalt het gekozen algoritme op, berekent de route en toont het resultaat op de kaart. */
     public void berekenRoute() {
         IRouteAlgorithm algoritme = algPanel.getGeteselecteerdAlgoritme();
         if (algoritme == null) {
@@ -80,6 +87,7 @@ public class MainFrame extends JFrame {
             resultatenPanel.voegRouteToe(route, elapsed, algPanel.getMaxCapaciteit());
             resultatenPanel.toonResultaten();
         } catch (UnsupportedOperationException ex) {
+            // Dit algoritme is nog niet af — geeft een melding aan de gebruiker
             JOptionPane.showMessageDialog(this,
                     "Dit algoritme is nog niet geïmplementeerd.\n" +
                     "Neem contact op met je teamgenoot die dit algoritme implementeert.",

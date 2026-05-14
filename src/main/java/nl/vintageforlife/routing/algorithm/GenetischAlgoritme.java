@@ -30,7 +30,7 @@ public class GenetischAlgoritme implements IRouteAlgorithm {
         throw new UnsupportedOperationException("muteer is nog niet geïmplementeerd.");
     }
 
-    public int getIMaxIteraties()         { return iMaxIteraties; }
-    public void setIMaxIteraties(int max)  { this.iMaxIteraties = max; }
-    public String getNaam()                { return naam; }
+    public int getIMaxIteraties() { return iMaxIteraties; }
+    public void setIMaxIteraties(int max) { this.iMaxIteraties = max; }
+    public String getNaam() { return naam; }
 }

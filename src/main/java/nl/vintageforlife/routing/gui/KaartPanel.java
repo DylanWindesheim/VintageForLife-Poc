@@ -14,6 +14,7 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
+/** Het middenpaneel met de OpenStreetMap kaart. Je kunt de kaart slepen en inzoomen met het scrollwiel. */
 public class KaartPanel extends JPanel {
 
     private Route huidigeRoute;
@@ -24,11 +25,13 @@ public class KaartPanel extends JPanel {
         setBorder(BorderFactory.createTitledBorder("Kaart"));
         setPreferredSize(new Dimension(640, 540));
 
+        // Stel de kaartviewer in met OpenStreetMap tegels, startzoom en beginpositie (Nederland)
         mapViewer = new JXMapViewer();
         mapViewer.setTileFactory(new OsmHttpsTileFactory());
         mapViewer.setZoom(7);
         mapViewer.setAddressLocation(new GeoPosition(52.3, 5.3));
 
+        // Muisgebeurtenissen: slepen om te pannen, scrollwiel om in/uit te zoomen
         MouseInputListener pan = new PanMouseInputListener(mapViewer);
         mapViewer.addMouseListener(pan);
         mapViewer.addMouseMotionListener(pan);
@@ -37,6 +40,7 @@ public class KaartPanel extends JPanel {
         add(mapViewer, BorderLayout.CENTER);
     }
 
+    /** Stelt een nieuwe route in en tekent die meteen op de kaart. */
     public void setHuidigeRoute(Route route) {
         this.huidigeRoute = route;
         herlaadPainters();
@@ -48,6 +52,7 @@ public class KaartPanel extends JPanel {
         if (mapViewer != null) mapViewer.repaint();
     }
 
+    /** Verwijdert de oude route van de kaart en tekent de nieuwe. */
     private void herlaadPainters() {
         if (huidigeRoute == null || huidigeRoute.getStops().isEmpty()) {
             mapViewer.setOverlayPainter(null);
