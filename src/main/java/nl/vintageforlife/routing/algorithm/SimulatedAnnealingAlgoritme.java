@@ -54,6 +54,13 @@ public class SimulatedAnnealingAlgoritme implements IRouteAlgorithm {
 
             // Maak een nieuwe route door het stuk tussen i en j om te draaien (2-opt)
             List<Stop> neighbour = AfstandsCalculator.twoOpt(currentTour, i, j);
+
+            // Sla de nieuwe route over als die de capaciteitsgrens overschrijdt
+            if (!AfstandsCalculator.isCapaciteitGeldig(neighbour, maxCapaciteit)) {
+                temp *= koelFactor;
+                continue;
+            }
+
             double neighbourAfstand = AfstandsCalculator.berekenTourAfstand(neighbour);
             double delta = neighbourAfstand - currentAfstand;
 

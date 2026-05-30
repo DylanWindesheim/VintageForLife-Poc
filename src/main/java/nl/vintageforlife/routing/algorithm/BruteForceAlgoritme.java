@@ -83,25 +83,6 @@ public class BruteForceAlgoritme implements IRouteAlgorithm {
         }
     }
 
-    /** Geeft alle permutaties van de stoplijst terug via recursie. */
-    public List<List<Stop>> genereerPermutaties(List<Stop> stops) {
-        List<List<Stop>> resultaat = new ArrayList<>();
-        permuteerNaarLijst(new ArrayList<>(stops), 0, resultaat);
-        return resultaat;
-    }
-
-    private void permuteerNaarLijst(List<Stop> lijst, int start, List<List<Stop>> resultaat) {
-        if (start == lijst.size()) {
-            resultaat.add(new ArrayList<>(lijst));
-            return;
-        }
-        for (int i = start; i < lijst.size(); i++) {
-            wissel(lijst, start, i);
-            permuteerNaarLijst(lijst, start + 1, resultaat);
-            wissel(lijst, start, i);
-        }
-    }
-
     private void wissel(List<Stop> lijst, int a, int b) {
         Stop tmp = lijst.get(a);
         lijst.set(a, lijst.get(b));

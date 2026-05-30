@@ -44,6 +44,10 @@ public class HillClimbingAlgoritme implements IRouteAlgorithm {
             for (int i = 1; i < currentTour.size() - 1; i++) {
                 for (int j = i + 1; j < currentTour.size(); j++) {
                     List<Stop> kandidaat = AfstandsCalculator.twoOpt(currentTour, i, j);
+
+                    // Sla kandidaten over die de capaciteitsgrens overschrijden
+                    if (!AfstandsCalculator.isCapaciteitGeldig(kandidaat, maxCapaciteit)) continue;
+
                     double kandidaatAfstand = AfstandsCalculator.berekenTourAfstand(kandidaat);
 
                     // Sla deze kandidaat op als die de kortste tot nu toe is

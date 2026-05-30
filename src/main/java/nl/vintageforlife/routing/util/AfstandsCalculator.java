@@ -2,6 +2,7 @@ package nl.vintageforlife.routing.util;
 
 import nl.vintageforlife.routing.model.Adres;
 import nl.vintageforlife.routing.model.Stop;
+import nl.vintageforlife.routing.model.StopType;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -35,6 +36,28 @@ public class AfstandsCalculator {
             total += berekenAfstand(tour.get(tour.size() - 1).getAdres(), tour.get(0).getAdres());
         }
         return total;
+    }
+
+    /**
+     * Controleert of de vrachtwagen nergens boven de maximale capaciteit uitkomt.
+     * De vrachtwagen vertrekt vol met alle leveringen (index 0 is het depot en telt niet mee).
+     * Bij levering daalt het gewicht, bij retour stijgt het.
+     */
+    public static boolean isCapaciteitGeldig(List<Stop> tour, int maxCapaciteit) {
+        double gewicht = tour.stream()
+                .filter(s -> s.getStopType() == StopType.LEVERING)
+                .mapToDouble(Stop::getGewicht)
+                .sum();
+        for (int i = 1; i < tour.size(); i++) {
+            Stop s = tour.get(i);
+            if (s.getStopType() == StopType.RETOUR) {
+                gewicht += s.getGewicht();
+                if (gewicht > maxCapaciteit) return false;
+            } else {
+                gewicht -= s.getGewicht();
+            }
+        }
+        return true;
     }
 
     /** Keert het stuk van de tour tussen index i en j om en geeft de nieuwe tour terug (2-opt). */

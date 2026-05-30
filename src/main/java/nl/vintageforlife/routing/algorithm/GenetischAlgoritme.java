@@ -35,11 +35,16 @@ public class GenetischAlgoritme implements IRouteAlgorithm {
 
         Random rng = new Random();
 
-        // Maak een beginpopulatie van willekeurig geschudde routes
+        // Maak een beginpopulatie van willekeurig geschudde routes die de capaciteit respecteren
         List<List<Stop>> populatie = new ArrayList<>();
         for (int i = 0; i < POPULATIE_GROOTTE; i++) {
-            List<Stop> tour = new ArrayList<>(klanten);
-            Collections.shuffle(tour, rng);
+            List<Stop> tour;
+            int pogingen = 0;
+            do {
+                tour = new ArrayList<>(klanten);
+                Collections.shuffle(tour, rng);
+                pogingen++;
+            } while (!AfstandsCalculator.isCapaciteitGeldig(volledig(tour, depot), maxCapaciteit) && pogingen < 50);
             populatie.add(tour);
         }
 
@@ -58,9 +63,18 @@ public class GenetischAlgoritme implements IRouteAlgorithm {
                 List<Stop> ouder1 = toernooi(populatie, depot, rng);
                 List<Stop> ouder2 = toernooi(populatie, depot, rng);
                 List<Stop> kind = crossover(ouder1, ouder2);
+                // Gebruik ouder1 als het kind een ongeldige route oplevert
+                if (!AfstandsCalculator.isCapaciteitGeldig(volledig(kind, depot), maxCapaciteit)) {
+                    kind = new ArrayList<>(ouder1);
+                }
 
-                // Pas soms een kleine willekeurige wijziging toe
-                if (rng.nextDouble() < MUTATIE_KANS) kind = muteer(kind);
+                // Pas soms een kleine willekeurige wijziging toe; alleen als het resultaat geldig blijft
+                if (rng.nextDouble() < MUTATIE_KANS) {
+                    List<Stop> gemuteerd = muteer(kind);
+                    if (AfstandsCalculator.isCapaciteitGeldig(volledig(gemuteerd, depot), maxCapaciteit)) {
+                        kind = gemuteerd;
+                    }
+                }
                 nieuw.add(kind);
             }
 
@@ -118,7 +132,7 @@ public class GenetischAlgoritme implements IRouteAlgorithm {
         return nieuw;
     }
 
-    /** Kiest de twee kortste tours uit een willekeurige steekproef en geeft de kortste terug. */
+    /** Kiest twee willekeurige tours uit de populatie en geeft de kortste van de twee terug. */
     private List<Stop> toernooi(List<List<Stop>> populatie, Stop depot, Random rng) {
         List<Stop> a = populatie.get(rng.nextInt(populatie.size()));
         List<Stop> b = populatie.get(rng.nextInt(populatie.size()));
