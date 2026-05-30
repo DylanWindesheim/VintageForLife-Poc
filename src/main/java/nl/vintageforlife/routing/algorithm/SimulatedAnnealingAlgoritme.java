@@ -5,7 +5,6 @@ import nl.vintageforlife.routing.model.Stop;
 import nl.vintageforlife.routing.util.AfstandsCalculator;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
@@ -35,7 +34,7 @@ public class SimulatedAnnealingAlgoritme implements IRouteAlgorithm {
         // Begin met de route die Nearest Neighbor heeft berekend als startpunt
         List<Stop> currentTour = new ArrayList<>(
                 new NearestNeighborAlgoritme().berekenRoute(stops, maxCapaciteit).getStops());
-        double currentAfstand = berekenTourAfstand(currentTour);
+        double currentAfstand = AfstandsCalculator.berekenTourAfstand(currentTour);
 
         // Sla de beste gevonden route apart op
         List<Stop> bestTour = new ArrayList<>(currentTour);
@@ -54,8 +53,8 @@ public class SimulatedAnnealingAlgoritme implements IRouteAlgorithm {
             int j = i + 1 + rng.nextInt(size - 1 - i);
 
             // Maak een nieuwe route door het stuk tussen i en j om te draaien (2-opt)
-            List<Stop> neighbour = twoOpt(currentTour, i, j);
-            double neighbourAfstand = berekenTourAfstand(neighbour);
+            List<Stop> neighbour = AfstandsCalculator.twoOpt(currentTour, i, j);
+            double neighbourAfstand = AfstandsCalculator.berekenTourAfstand(neighbour);
             double delta = neighbourAfstand - currentAfstand;
 
             // Accepteer de nieuwe route als die korter is, of soms ook als die langer is
@@ -78,29 +77,6 @@ public class SimulatedAnnealingAlgoritme implements IRouteAlgorithm {
         for (Stop s : bestTour) result.voegtStop(s);
         result.setTotaalAfstand(bestAfstand);
         return result;
-    }
-
-    /** Draait het stuk van de route tussen index i en j om. Dit is een 2-opt verbetering. */
-    private List<Stop> twoOpt(List<Stop> tour, int i, int j) {
-        List<Stop> newTour = new ArrayList<>(tour.subList(0, i));
-        List<Stop> reversed = new ArrayList<>(tour.subList(i, j + 1));
-        Collections.reverse(reversed);
-        newTour.addAll(reversed);
-        newTour.addAll(tour.subList(j + 1, tour.size()));
-        return newTour;
-    }
-
-    /** Berekent de totale afstand van een route, inclusief de terugrit naar het depot. */
-    private double berekenTourAfstand(List<Stop> tour) {
-        double total = 0.0;
-        for (int i = 0; i < tour.size() - 1; i++) {
-            total += AfstandsCalculator.berekenAfstand(tour.get(i).getAdres(), tour.get(i + 1).getAdres());
-        }
-        if (tour.size() > 1) {
-            total += AfstandsCalculator.berekenAfstand(
-                    tour.get(tour.size() - 1).getAdres(), tour.get(0).getAdres());
-        }
-        return total;
     }
 
     public double getTemperature() { return temperature; }

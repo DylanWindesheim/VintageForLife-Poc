@@ -2,32 +2,148 @@ package nl.vintageforlife.routing.algorithm;
 
 import nl.vintageforlife.routing.model.Route;
 import nl.vintageforlife.routing.model.Stop;
+import nl.vintageforlife.routing.util.AfstandsCalculator;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 
-/** Genetisch algoritme TSP — evolueert een populatie van tours via selectie, crossover en mutatie. */
+/**
+ * Dit algoritme werkt zoals de natuur: een groep routes ("populatie") evolueert over meerdere
+ * generaties. De kortste routes hebben de meeste kans om te worden doorgegeven aan de volgende
+ * generatie. Routes worden gecombineerd (crossover) en soms willekeurig aangepast (mutatie)
+ * zodat nieuwe oplossingen worden ontdekt. Na iMaxIteraties generaties wordt de beste gevonden
+ * route teruggegeven.
+ */
 public class GenetischAlgoritme implements IRouteAlgorithm {
 
     private final String naam = "Genetisch Algoritme";
-    private int iMaxIteraties;
+    private int iMaxIteraties; // aantal generaties dat het algoritme doorloopt
+    private static final int POPULATIE_GROOTTE = 60;
+    private static final double MUTATIE_KANS = 0.15;
 
     public GenetischAlgoritme() { this.iMaxIteraties = 500; }
     public GenetischAlgoritme(int iMaxIteraties) { this.iMaxIteraties = iMaxIteraties; }
 
     @Override
     public Route berekenRoute(List<Stop> stops, int maxCapaciteit) {
-        // TODO: implementeren — initialiseer populatie, evalueer fitness, selecteer/crossover/muteer voor iMaxIteraties generaties
-        throw new UnsupportedOperationException("GenetischAlgoritme is nog niet geïmplementeerd.");
+        if (stops == null || stops.isEmpty()) return new Route(naam);
+
+        Stop depot = stops.get(0);
+        List<Stop> klanten = new ArrayList<>(stops.subList(1, stops.size()));
+
+        Random rng = new Random();
+
+        // Maak een beginpopulatie van willekeurig geschudde routes
+        List<List<Stop>> populatie = new ArrayList<>();
+        for (int i = 0; i < POPULATIE_GROOTTE; i++) {
+            List<Stop> tour = new ArrayList<>(klanten);
+            Collections.shuffle(tour, rng);
+            populatie.add(tour);
+        }
+
+        List<Stop> besteTour = beste(populatie, depot);
+        double besteAfstand = AfstandsCalculator.berekenTourAfstand(volledig(besteTour, depot));
+
+        // Laat de populatie evolueren over iMaxIteraties generaties
+        for (int gen = 0; gen < iMaxIteraties; gen++) {
+            List<List<Stop>> nieuw = new ArrayList<>();
+
+            // Houd de beste tour altijd door (elitisme)
+            nieuw.add(new ArrayList<>(besteTour));
+
+            while (nieuw.size() < POPULATIE_GROOTTE) {
+                // Selecteer twee ouders via toernooiselectie en combineer ze
+                List<Stop> ouder1 = toernooi(populatie, depot, rng);
+                List<Stop> ouder2 = toernooi(populatie, depot, rng);
+                List<Stop> kind = crossover(ouder1, ouder2);
+
+                // Pas soms een kleine willekeurige wijziging toe
+                if (rng.nextDouble() < MUTATIE_KANS) kind = muteer(kind);
+                nieuw.add(kind);
+            }
+
+            populatie = nieuw;
+
+            // Bijhouden of deze generatie een betere route heeft opgeleverd
+            List<Stop> kandidaat = beste(populatie, depot);
+            double kandidaatAfstand = AfstandsCalculator.berekenTourAfstand(volledig(kandidaat, depot));
+            if (kandidaatAfstand < besteAfstand) {
+                besteAfstand = kandidaatAfstand;
+                besteTour = kandidaat;
+            }
+        }
+
+        Route route = new Route(naam);
+        route.voegtStop(depot);
+        for (Stop s : besteTour) route.voegtStop(s);
+        route.setTotaalAfstand(besteAfstand);
+        return route;
     }
 
-    /** TODO: implementeren — Order Crossover (OX): kopieer segment van parent1, vul aan met parent2. */
-    public List<Stop> crossover(List<Stop> parent1, List<Stop> parent2) {
-        throw new UnsupportedOperationException("crossover is nog niet geïmplementeerd.");
+    /**
+     * Order Crossover (OX): kopieert een willekeurig segment van ouder1 en vult
+     * de rest aan met de volgorde uit ouder2. Zo blijven alle stops aanwezig.
+     */
+    public List<Stop> crossover(List<Stop> ouder1, List<Stop> ouder2) {
+        int n = ouder1.size();
+        Random rng = new Random();
+        int start = rng.nextInt(n);
+        int eind = start + rng.nextInt(n - start);
+
+        List<Stop> kind = new ArrayList<>(Collections.nCopies(n, null));
+
+        // Kopieer het segment van ouder1
+        for (int i = start; i <= eind; i++) kind.set(i, ouder1.get(i));
+
+        // Vul de rest aan met de volgorde uit ouder2, sla al aanwezige stops over
+        int pos = (eind + 1) % n;
+        for (Stop stop : ouder2) {
+            if (!kind.contains(stop)) {
+                kind.set(pos, stop);
+                pos = (pos + 1) % n;
+            }
+        }
+        return kind;
     }
 
-    /** TODO: implementeren — wissel twee willekeurige stops om diversiteit te introduceren. */
+    /** Verwisselt twee willekeurige stops om diversiteit in de populatie te houden. */
     public List<Stop> muteer(List<Stop> tour) {
-        throw new UnsupportedOperationException("muteer is nog niet geïmplementeerd.");
+        List<Stop> nieuw = new ArrayList<>(tour);
+        Random rng = new Random();
+        int i = rng.nextInt(nieuw.size());
+        int j = rng.nextInt(nieuw.size());
+        Collections.swap(nieuw, i, j);
+        return nieuw;
+    }
+
+    /** Kiest de twee kortste tours uit een willekeurige steekproef en geeft de kortste terug. */
+    private List<Stop> toernooi(List<List<Stop>> populatie, Stop depot, Random rng) {
+        List<Stop> a = populatie.get(rng.nextInt(populatie.size()));
+        List<Stop> b = populatie.get(rng.nextInt(populatie.size()));
+        double afstandA = AfstandsCalculator.berekenTourAfstand(volledig(a, depot));
+        double afstandB = AfstandsCalculator.berekenTourAfstand(volledig(b, depot));
+        return afstandA <= afstandB ? a : b;
+    }
+
+    /** Geeft de tour met de kortste afstand uit de populatie terug. */
+    private List<Stop> beste(List<List<Stop>> populatie, Stop depot) {
+        List<Stop> beste = null;
+        double besteAfstand = Double.MAX_VALUE;
+        for (List<Stop> tour : populatie) {
+            double afstand = AfstandsCalculator.berekenTourAfstand(volledig(tour, depot));
+            if (afstand < besteAfstand) { besteAfstand = afstand; beste = tour; }
+        }
+        return beste;
+    }
+
+    /** Bouwt een volledige tour met depot vooraan voor afstandsberekening. */
+    private List<Stop> volledig(List<Stop> tour, Stop depot) {
+        List<Stop> volledig = new ArrayList<>();
+        volledig.add(depot);
+        volledig.addAll(tour);
+        return volledig;
     }
 
     public int getIMaxIteraties() { return iMaxIteraties; }

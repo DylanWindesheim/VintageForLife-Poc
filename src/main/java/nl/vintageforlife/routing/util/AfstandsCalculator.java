@@ -3,6 +3,8 @@ package nl.vintageforlife.routing.util;
 import nl.vintageforlife.routing.model.Adres;
 import nl.vintageforlife.routing.model.Stop;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class AfstandsCalculator {
@@ -23,17 +25,26 @@ public class AfstandsCalculator {
         return AARDE_STRAAL_METER * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
     }
 
-    /** Geeft een symmetrische n×n afstandsmatrix in meters terug voor de gegeven stoplijst. */
-    public static double[][] maakAfstandsMatrix(List<Stop> stops) {
-        int n = stops.size();
-        double[][] matrix = new double[n][n];
-        for (int i = 0; i < n; i++) {
-            for (int j = i + 1; j < n; j++) {
-                double d = berekenAfstand(stops.get(i).getAdres(), stops.get(j).getAdres());
-                matrix[i][j] = d;
-                matrix[j][i] = d;
-            }
+    /** Berekent de totale afstand van een rondrit inclusief de terugrit naar het depot (index 0). */
+    public static double berekenTourAfstand(List<Stop> tour) {
+        double total = 0.0;
+        for (int i = 0; i < tour.size() - 1; i++) {
+            total += berekenAfstand(tour.get(i).getAdres(), tour.get(i + 1).getAdres());
         }
-        return matrix;
+        if (tour.size() > 1) {
+            total += berekenAfstand(tour.get(tour.size() - 1).getAdres(), tour.get(0).getAdres());
+        }
+        return total;
     }
+
+    /** Keert het stuk van de tour tussen index i en j om en geeft de nieuwe tour terug (2-opt). */
+    public static List<Stop> twoOpt(List<Stop> tour, int i, int j) {
+        List<Stop> newTour = new ArrayList<>(tour.subList(0, i));
+        List<Stop> reversed = new ArrayList<>(tour.subList(i, j + 1));
+        Collections.reverse(reversed);
+        newTour.addAll(reversed);
+        newTour.addAll(tour.subList(j + 1, tour.size()));
+        return newTour;
+    }
+
 }

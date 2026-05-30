@@ -8,11 +8,9 @@ import java.util.List;
 public interface IRouteAlgorithm {
 
     /**
-     * Calculates and returns an optimised route for the given stops.
-     *
-     * @param stops list of delivery/return stops (depot is always index 0)
-     * @param maxCapaciteit maximum vehicle load in kg
-     * @return a fully built Route with totaalAfstand set
+     * Berekent een route langs alle stops en geeft die terug.
+     * De stop op index 0 is altijd het depot (vertrekpunt).
+     * De totale afstand wordt ingesteld op het Route-object.
      */
     Route berekenRoute(List<Stop> stops, int maxCapaciteit);
 }

@@ -1,102 +1,98 @@
 package nl.vintageforlife.routing.gui;
 
-import nl.vintageforlife.routing.algorithm.IRouteAlgorithm;
+import nl.vintageforlife.routing.algorithm.*;
 import nl.vintageforlife.routing.model.Route;
 import nl.vintageforlife.routing.model.Stop;
 import nl.vintageforlife.routing.util.RouteUtils;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
-/** Het hoofdvenster van de applicatie. Hier komen alle panelen samen en worden de knoppen beheerd. */
+/** Het hoofdvenster van de applicatie. Berekent alle algoritmen tegelijk en toont de vergelijking. */
 public class MainFrame extends JFrame {
 
-    private AlgorithmSelectiePanel algPanel;
-    private KaartPanel kaartPanel;
-    private ResultatenPanel resultatenPanel;
+    private VergelijkingsPanel vergelijkingsPanel;
+    private JSpinner capaciteitSpinner;
     private List<Stop> stopList;
 
-    public MainFrame() { initialiseer(); }
+    // Alle beschikbare algoritmen op volgorde
+    private final Map<String, IRouteAlgorithm> algoritmen = new LinkedHashMap<>();
 
-    /** Bouwt het venster op: laadt testdata, maakt de drie panelen aan en voegt knoppen toe. */
-    public void initialiseer() {
-        setTitle("Vintage for Life — Route Optimalisatie POC");
+    public MainFrame() {
+        algoritmen.put("Nearest Neighbor", new NearestNeighborAlgoritme());
+        algoritmen.put("Simulated Annealing", new SimulatedAnnealingAlgoritme());
+        algoritmen.put("Hill Climbing", new HillClimbingAlgoritme());
+        algoritmen.put("Brute Force", new BruteForceAlgoritme());
+        algoritmen.put("Genetisch Algoritme", new GenetischAlgoritme());
+        initialiseer();
+    }
+
+    private void initialiseer() {
+        setTitle("Vintage for Life — Route Optimalisatie");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLayout(new BorderLayout(6, 6));
+        setLayout(new BorderLayout(8, 8));
+        getRootPane().setBorder(BorderFactory.createEmptyBorder(12, 12, 12, 12));
 
         stopList = RouteUtils.genereerTestdata();
-        algPanel = new AlgorithmSelectiePanel();
-        kaartPanel = new KaartPanel();
-        resultatenPanel = new ResultatenPanel();
 
-        // Knoppen onderaan het venster
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 6));
-        JButton btnBereken = new JButton("Bereken Route");
+        // Bovenste balk met instellingen en knoppen
+        JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+        JLabel capaciteitLabel = new JLabel("Max. capaciteit (kg):");
+        capaciteitSpinner = new JSpinner(new SpinnerNumberModel(500, 50, 5000, 50));
+        capaciteitSpinner.setPreferredSize(new Dimension(80, 28));
+
+        JButton btnBereken = new JButton("Bereken alle routes");
         JButton btnReset = new JButton("Reset testdata");
-        btnBereken.setFont(new Font("SansSerif", Font.BOLD, 13));
-
-        // Klik op "Bereken Route" → voer het gekozen algoritme uit
-        btnBereken.addActionListener(e -> berekenRoute());
-
-        // Klik op "Reset" → laad de originele testdata opnieuw
+        btnBereken.addActionListener(e -> berekenAlleRoutes());
         btnReset.addActionListener(e -> {
             stopList = RouteUtils.genereerTestdata();
-            kaartPanel.setHuidigeRoute(null);
-            kaartPanel.repaint();
-            JOptionPane.showMessageDialog(this, "Testdata is opnieuw geladen (8 stops).", "Reset",
-                    JOptionPane.INFORMATION_MESSAGE);
+            vergelijkingsPanel.reset();
         });
-        buttonPanel.add(btnBereken);
-        buttonPanel.add(btnReset);
 
-        JLabel statusBar = new JLabel("  Klaar. Selecteer een algoritme en klik 'Bereken Route'.");
-        statusBar.setFont(new Font("SansSerif", Font.ITALIC, 11));
-        statusBar.setBorder(BorderFactory.createEtchedBorder());
+        topPanel.add(capaciteitLabel);
+        topPanel.add(capaciteitSpinner);
+        topPanel.add(Box.createHorizontalStrut(10));
+        topPanel.add(btnBereken);
+        topPanel.add(btnReset);
 
-        JPanel southPanel = new JPanel(new BorderLayout());
-        southPanel.add(buttonPanel, BorderLayout.WEST);
-        southPanel.add(statusBar, BorderLayout.SOUTH);
+        vergelijkingsPanel = new VergelijkingsPanel();
 
-        // Links: algoritme keuze, midden: kaart, rechts: resultaten
-        add(algPanel, BorderLayout.WEST);
-        add(kaartPanel, BorderLayout.CENTER);
-        add(resultatenPanel, BorderLayout.EAST);
-        add(southPanel, BorderLayout.SOUTH);
+        add(topPanel, BorderLayout.NORTH);
+        add(vergelijkingsPanel, BorderLayout.CENTER);
 
         pack();
-        setMinimumSize(new Dimension(1100, 620));
+        setMinimumSize(new Dimension(750, 500));
         setLocationRelativeTo(null);
         setVisible(true);
     }
 
-    /** Haalt het gekozen algoritme op, berekent de route en toont het resultaat op de kaart. */
-    public void berekenRoute() {
-        IRouteAlgorithm algoritme = algPanel.getGeteselecteerdAlgoritme();
-        if (algoritme == null) {
-            JOptionPane.showMessageDialog(this, "Selecteer een algoritme.", "Fout", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-        try {
-            long start = System.currentTimeMillis();
-            Route route = algoritme.berekenRoute(stopList, algPanel.getMaxCapaciteit());
-            long elapsed = System.currentTimeMillis() - start;
+    /** Voert alle algoritmen uit en stuurt de resultaten naar het vergelijkingspaneel. */
+    private void berekenAlleRoutes() {
+        int maxCapaciteit = (int) capaciteitSpinner.getValue();
+        vergelijkingsPanel.reset();
 
-            kaartPanel.setHuidigeRoute(route);
-            kaartPanel.repaint();
-            resultatenPanel.voegRouteToe(route, elapsed, algPanel.getMaxCapaciteit());
-            resultatenPanel.toonResultaten();
-        } catch (UnsupportedOperationException ex) {
-            // Dit algoritme is nog niet af — geeft een melding aan de gebruiker
-            JOptionPane.showMessageDialog(this,
-                    "Dit algoritme is nog niet geïmplementeerd.\n" +
-                    "Neem contact op met je teamgenoot die dit algoritme implementeert.",
-                    "Niet beschikbaar", JOptionPane.WARNING_MESSAGE);
+        for (Map.Entry<String, IRouteAlgorithm> entry : algoritmen.entrySet()) {
+            long start = System.currentTimeMillis();
+            Route route = entry.getValue().berekenRoute(stopList, maxCapaciteit);
+            long tijd = System.currentTimeMillis() - start;
+            vergelijkingsPanel.voegToe(route, tijd);
         }
+
+        vergelijkingsPanel.toonResultaten();
     }
 
-    public void voegStopToe(Stop stop) { stopList.add(stop); }
-    public void toonResultaten(List<Stop> stops) { resultatenPanel.toonResultaten(); }
-
-    public static void main(String[] args) { SwingUtilities.invokeLater(MainFrame::new); }
+    public static void main(String[] args) {
+        try {
+            for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
+                if ("Nimbus".equals(info.getName())) {
+                    UIManager.setLookAndFeel(info.getClassName());
+                    break;
+                }
+            }
+        } catch (Exception ignored) {}
+        SwingUtilities.invokeLater(MainFrame::new);
+    }
 }
