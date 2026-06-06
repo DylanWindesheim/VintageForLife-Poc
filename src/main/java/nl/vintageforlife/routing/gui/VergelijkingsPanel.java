@@ -70,7 +70,7 @@ public class VergelijkingsPanel extends JPanel {
         bovenPanel.add(labelBeste, BorderLayout.SOUTH);
 
         // Onderstuk: stoppenlijst van het geselecteerde algoritme
-        stopModel = new DefaultTableModel(new String[]{"#", "Klant", "Type", "Gewicht"}, 0) {
+        stopModel = new DefaultTableModel(new String[]{"#", "Klant", "Adres", "Type", "Gewicht"}, 0) {
             @Override public boolean isCellEditable(int r, int c) { return false; }
         };
         stopTabel = new JTable(stopModel);
@@ -81,8 +81,9 @@ public class VergelijkingsPanel extends JPanel {
         stopTabel.setGridColor(new Color(220, 220, 220));
         stopTabel.getColumnModel().getColumn(0).setPreferredWidth(30);
         stopTabel.getColumnModel().getColumn(1).setPreferredWidth(120);
-        stopTabel.getColumnModel().getColumn(2).setPreferredWidth(80);
+        stopTabel.getColumnModel().getColumn(2).setPreferredWidth(220);
         stopTabel.getColumnModel().getColumn(3).setPreferredWidth(80);
+        stopTabel.getColumnModel().getColumn(4).setPreferredWidth(80);
 
         JLabel stopHeader = new JLabel("Stops van geselecteerd algoritme:");
         stopHeader.setFont(new Font("SansSerif", Font.BOLD, 12));
@@ -150,7 +151,9 @@ public class VergelijkingsPanel extends JPanel {
         int nr = 1;
         for (Stop stop : routes.get(rij).getStops()) {
             stopModel.addRow(new Object[]{
-                    nr++, stop.getKlantNaam(), stop.getStopType(),
+                    nr++, stop.getKlantNaam(),
+                    stop.getAdres() != null ? stop.getAdres().toString() : "",
+                    stop.getStopType(),
                     String.format("%.0f kg", stop.getGewicht())
             });
         }
