@@ -8,8 +8,6 @@ public class Stop {
     private double volume;
     private String klantNaam;
 
-    public Stop() {}
-
     public Stop(StopType stopType, Adres adres, double gewicht, double volume, String klantNaam) {
         this.stopType = stopType;
         this.adres = adres;

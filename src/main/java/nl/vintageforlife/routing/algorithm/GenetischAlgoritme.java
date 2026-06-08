@@ -9,13 +9,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
-/**
- * Dit algoritme werkt zoals de natuur: een groep routes ("populatie") evolueert over meerdere
- * generaties. De kortste routes hebben de meeste kans om te worden doorgegeven aan de volgende
- * generatie. Routes worden gecombineerd (crossover) en soms willekeurig aangepast (mutatie)
- * zodat nieuwe oplossingen worden ontdekt. Na iMaxIteraties generaties wordt de beste gevonden
- * route teruggegeven.
- */
+
 public class GenetischAlgoritme implements IRouteAlgorithm {
 
     private final String naam = "Genetisch Algoritme";

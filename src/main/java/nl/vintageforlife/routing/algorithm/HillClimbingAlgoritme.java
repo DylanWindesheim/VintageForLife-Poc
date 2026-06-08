@@ -7,13 +7,6 @@ import nl.vintageforlife.routing.util.AfstandsCalculator;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Dit algoritme begint met de route van Nearest Neighbor en probeert die te verbeteren door
- * stukken van de route om te draaien. Bij elke ronde wordt de beste verbetering uitgevoerd.
- * Zodra er geen verbetering meer mogelijk is, stopt het algoritme. Anders dan Simulated Annealing
- * accepteert Hill Climbing nooit een slechtere route — daardoor is het sneller maar kan het
- * blijven hangen op een oplossing die lokaal goed maar globaal niet de beste is.
- */
 public class HillClimbingAlgoritme implements IRouteAlgorithm {
 
     private final String naam = "Hill Climbing";

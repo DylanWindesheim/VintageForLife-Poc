@@ -8,13 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-/**
- * Dit algoritme begint met de route van Nearest Neighbor en probeert die daarna te verbeteren.
- * Het wisselt steeds twee stukken van de route om en kijkt of de totale afstand korter wordt.
- * Soms wordt een slechtere route toch geaccepteerd — zo voorkom je dat het vastloopt op een
- * oplossing die lokaal goed lijkt maar globaal beter kan. Naarmate het algoritme langer loopt
- * (temperatuur daalt) worden slechtere keuzes minder snel geaccepteerd.
- */
 public class SimulatedAnnealingAlgoritme implements IRouteAlgorithm {
 
     private final String naam = "Simulated Annealing";

@@ -8,15 +8,6 @@ import nl.vintageforlife.routing.util.AfstandsCalculator;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Dit algoritme berekent een route door steeds naar de dichtstbijzijnde nog niet bezochte
- * stop te rijden. Het is snel maar niet altijd de kortst mogelijke route.
- * Met iMaxIteraties kun je het maximale aantal stops per rit beperken.
- *
- * Het retourproces wordt correct verwerkt: de vrachtwagen vertrekt beladen met alle
- * leveringen. Bij elke levering daalt het gewicht, bij elke retour stijgt het.
- * Een retourstop wordt overgeslagen als die de maximale capaciteit zou overschrijden.
- */
 public class NearestNeighborAlgoritme implements IRouteAlgorithm {
 
     private final String naam = "Nearest Neighbor";

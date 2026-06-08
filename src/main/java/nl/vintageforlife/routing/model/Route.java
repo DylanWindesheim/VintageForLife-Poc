@@ -24,7 +24,6 @@ public class Route {
         totaalGewicht += stop.getGewicht();
     }
 
-    /** UML: getInformatieStops():List<Stop> */
     public List<Stop> getInformatieStops() {
         return new ArrayList<>(stops);
     }

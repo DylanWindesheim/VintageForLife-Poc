@@ -8,12 +8,6 @@ import nl.vintageforlife.routing.util.AfstandsCalculator;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Dit algoritme probeert alle mogelijke volgorden van stops en kiest de kortste route.
- * Het geeft altijd de optimale oplossing, maar is alleen bruikbaar bij weinig stops
- * omdat het aantal mogelijkheden heel snel groeit (8 stops = 5040 combinaties, 12 stops = 39 miljoen).
- * Met iMaxIteraties kun je het aantal geprobeerde permutaties beperken.
- */
 public class BruteForceAlgoritme implements IRouteAlgorithm {
 
     private final String naam = "Brute Force";
